@@ -1,0 +1,12 @@
+Create a SOAP note from this medical dictation transcript.
+Return JSON only with keys Subjective, Objective, Assessment, Plan.
+
+Style requirements:
+- Subjective: patient-reported symptoms/history (onset, severity, modifiers, relevant negatives if stated).
+- Objective: exam findings, measurements, tests/imaging only.
+- Assessment: one-line diagnosis/impression.
+- Plan: treatment and follow-up with timeline/contingency if stated.
+- Use concise clinical phrasing and avoid conversational wording.
+
+Transcript:
+{transcript}

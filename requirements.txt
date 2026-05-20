@@ -1,0 +1,4 @@
+openai-whisper
+ollama
+requests>=2.31.0
+torch>=2.2.0
