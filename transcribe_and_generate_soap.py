@@ -7,7 +7,7 @@ import sys
 from pathlib import Path
 from shutil import which
 
-import requests
+from ollama import generate
 import whisper
 
 
@@ -56,19 +56,15 @@ def transcribe_audio(audio_path: Path, model_name: str) -> str:
 
 
 
-def call_ollama(transcript: str, model: str, ollama_url: str, prompt_template: str) -> str:
+def call_ollama(transcript: str, model: str, prompt_template: str) -> str:
     prompt = prompt_template.format(transcript=transcript)
-    payload = {
-        "model": model,
-        "prompt": prompt,
-        "system": SYSTEM_PROMPT,
-        "stream": False,
-        "format": "json",
-    }
-    response = requests.post(ollama_url.rstrip("/") + "/api/generate", json=payload, timeout=300)
-    response.raise_for_status()
-    data = response.json()
-    content = data.get("response", "").strip()
+    response = generate(
+        model=model,
+        prompt=prompt,
+        system=SYSTEM_PROMPT,
+        format="json",
+    )
+    content = response["response"].strip()
     if not content:
         raise RuntimeError("Ollama returned an empty response.")
     return content
@@ -126,7 +122,6 @@ def parse_args() -> argparse.Namespace:
         help="Local Whisper model size: tiny, base, small, medium, large, turbo.",
     )
     parser.add_argument("--ollama-model", default=os.getenv("OLLAMA_MODEL", "llama3.1:8b"), help="Ollama model name.")
-    parser.add_argument("--ollama-url", default=os.getenv("OLLAMA_URL", "http://localhost:11434"), help="Base URL for Ollama.")
     parser.add_argument(
         "--prompt-file",
         default=os.getenv("SOAP_PROMPT_FILE", str(DEFAULT_PROMPT_FILE)),
@@ -150,15 +145,12 @@ def main() -> int:
         check_ffmpeg()
         transcript = transcribe_audio(audio_path, args.whisper_model)
         prompt_template = load_prompt_template(prompt_file)
-        raw_soap = call_ollama(transcript, args.ollama_model, args.ollama_url, prompt_template)
+        raw_soap = call_ollama(transcript, args.ollama_model, prompt_template)
         soap_note = parse_soap_json(raw_soap)
         print_output(transcript, soap_note)
         save_output(audio_path, transcript, soap_note, output_path)
         print(f"Saved JSON output to: {output_path}")
         return 0
-    except requests.exceptions.RequestException as exc:
-        print(f"Network/Ollama error: {exc}", file=sys.stderr)
-        return 1
     except Exception as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 1
