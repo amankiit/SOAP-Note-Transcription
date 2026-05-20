@@ -69,7 +69,7 @@ python3 transcribe_and_generate_soap.py
 
 ```mermaid
 flowchart TD
-    A[Medical Dictation Audio Input] --> B[Whisper Transcription]
+    A[Medical Dictation Audio Input] --> B[Whisper Transcription/Speech recognition]
     B --> C[Transcript Text]
     C --> D[Ollama Llama 3.1 SOAP Generation]
     D --> E[Structured SOAP Sections]
